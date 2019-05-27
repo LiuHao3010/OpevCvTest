@@ -14,6 +14,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,19 +27,19 @@ import java.util.ArrayList;
 import static org.opencv.core.CvType.CV_32FC3;
 @Component
 public class DemoService {
-        NativeImageLoader LOADER = new NativeImageLoader(96, 96, 3);
+        @Autowired
+        Util util;
         public int[] doservice(String filepath) {
             try {
-                String simpleMlp = null;
-                try {
-                    simpleMlp = new ClassPathResource("model-38-0.99.h5").getFile().getPath();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-                MultiLayerNetwork model = KerasModelImport.importKerasSequentialModelAndWeights(simpleMlp);
                 File file = new File(filepath);
-                File[] files = file.listFiles();
-
+                File[] files;
+                if (file.isDirectory()){
+                     files = file.listFiles();
+                }
+                else{
+                     files=new File[1];
+                     files[0]=file;
+                }
                 ArrayList<INDArray> vectors = new ArrayList<INDArray>();
                 //You need this loop if you submitted more than one file
                 int i = 0;
@@ -52,7 +53,7 @@ public class DemoService {
                             new Size(96, 96));
                     image.convertTo(image, CV_32FC3);
 
-                    INDArray indArray = LOADER.asMatrix(image);
+                    INDArray indArray = util.LOADER.asMatrix(image);
                     System.out.println(indArray);
                     scaler.transform(indArray);
 
@@ -63,7 +64,7 @@ public class DemoService {
                 //Imgcodecs.imwrite("C:\\input.jpg", image);
 
                 //INDArray transpose = transpose(indArray);
-                int[] predict = model.predict(all_indArray);
+                int[] predict = util.model.predict(all_indArray);
                 for (int p : predict) {
                     System.out.println(p);
                 }
